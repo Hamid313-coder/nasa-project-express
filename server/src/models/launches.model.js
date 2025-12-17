@@ -1,8 +1,6 @@
 const launchesDB = require("./launches.mongo");
 const planets = require("./planets.mongo");
 
-const launches = new Map();
-
 const DEFUAL_FLIGHT_NUMBER = 100;
 
 const launch = {
@@ -67,17 +65,24 @@ async function getLatestFlightNumber() {
   return latestLaunch.flightNumber;
 }
 
-function existsLaunchById(launchId) {
-  return launches.has(launchId);
+async function existsLaunchById(launchId) {
+  return await launchesDB.findOne({
+    flightNumber: launchId,
+  });
 }
 
-function abortLaunchById(launchId) {
-  const launch = launches.get(launchId);
+async function abortLaunchById(launchId) {
+  const aborted = await launchesDB.updateOne(
+    {
+      flightNumber: launchId,
+    },
+    {
+      upcoming: false,
+      success: false,
+    }
+  );
 
-  launch.upcoming = false;
-  launch.success = false;
-
-  return launch;
+  return aborted.modifiedCount == 1;
 }
 
 module.exports = {
